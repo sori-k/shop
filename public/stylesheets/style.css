@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Gaegu&display=swap');
+
+* {
+  font-family: 'Gaegu', sans-serif;
+  font-size: 1.0rem;
+}
+
+  form span {
+    width: 100px;
+    justify-content: center;
+  }
