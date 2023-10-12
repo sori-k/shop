@@ -48,4 +48,15 @@
             location.href="/";
         }
     });
+
+    //마이페이지를 눌렀을 때
+    $("#mypage").on("click", "a", function(e){
+        e.preventDefault(); // a 태그는 어디로 이동하려는 속성이 있어서 막아줌
+
+        location.href="/users/mypage?uid=" + sessionStorage.getItem("uid"); 
+        //location.href="/users/mypage" + sessionStorage.getItem("uid"); <- params로 보내는 경우
+                                                                //sessionStorage에서 받아온 uid를 users.js의 :uid로 넘김
+
+        //location.href="/users/mypage?uid" <- query로 보내는 경우 ( ?변수명=값 )
+    });
 </script>

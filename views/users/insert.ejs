@@ -1,27 +1,27 @@
 <div class="my-5 row justify-content-center">
     <h1 class="text-center">회원가입</h1>
-    <form name="frm" class="col-md-5 card p-2" method="post" action="/users/insert">
-        <div class="input-group mb-3">
+    <form name="frm" class="col-md-5 card p-2" method="post">
+        <div class="input-group mb-2">
             <span class="input-group-text">아이디</span>
             <input name="uid" class="form-control">
             <button id="check" class="btn btn-primary" type="button">중복 확인</button>
         </div>
-        <div class="input-group mb-3">
+        <div class="input-group mb-2">
             <span class="input-group-text">비밀번호</span>
             <input name="upass" class="form-control" type="password">
         </div>
-        <div class="input-group mb-3">
+        <div class="input-group mb-2">
             <span class="input-group-text">이름</span>
             <input name="uname" class="form-control">
         </div>
-        <div class="input-group mb-3">
+        <div class="input-group mb-2">
             <span class="input-group-text">전화번호</span>
             <input name="phone" class="form-control">
         </div>
         <div class="input-group mb-1">
             <span class="input-group-text">주소</span>
             <input name="address1" class="form-control">
-            <button class="btn btn-primary">검색</button>
+            <button id="search" class="btn btn-primary">검색</button>
         </div>
         <div>
             <input name="address2" class="form-control" placeholder="상세 주소 입력">
@@ -34,12 +34,12 @@
 </div>
 
 <script>
-    let check=false; //중복체크 여부 확인하는 변수
+    let check=false; // 중복체크 여부 확인하는 변수
 
-     // 폼이 써밋될 때
+    //폼이 써밋될 때,  (등록버튼을 눌렀을때)
     $(frm).on("submit", function(e){
         e.preventDefault();
-
+        
         //유효성 체크
         const uid=$(frm.uid).val();
         const upass=$(frm.upass).val();
@@ -48,48 +48,59 @@
         const address1=$(frm.address1).val();
         const address2=$(frm.address2).val();
 
-        if(uid == "") {
-            alert("아이디를 입력하세요.");
+        if(uid == ""){
+            alert("아이디를 입력하세요");
             $(frm.uid).focus();
-        }else if(!check){ //중복체크 안한경우 . check == false 라고 적어도됨
-            alert("아이디 중복체크를 하세요.");
+        }else if(!check){ //중복체크를 안한경우. chech==false
+            alert("아이디 중복체크를 하세요");
         }else if(upass == ""){
-            alert("비밀번호를 입력하세요.");
+            alert("비밀번호를 입력하세요");
             $(frm.upass).focus();
         }else{
-            if(confirm("회원가입하시겠습니까?")){
-                frm.submit(); //ajax 안쓰고 할 때는 위에 method="post" 지정, action="url지정"
-            }
+            if(confirm("회원가입하시겠습니까?")) frm.submit();
         }
     });
 
-    // 아이디 중복체크
-    $("#check").on("click", function(){ //check 버튼을 눌렀을때,
-        const uid=$(frm.uid).val(); //uid의 값을 가져와서
+    //아이디 중복체크 (버튼 눌렀을 때)
+    $("#check").on("click", function(){
+        const uid=$(frm.uid).val();
         if(uid == ""){
             alert("중복 체크할 아이디를 입력하세요.");
             $(frm.uid).focus();
-            return;
-        }
-        const upass="";
-        $.ajax({
-            type:"post",
-            url:'/users/login',
-            data:{uid:uid},
-            success:function(data){
-                if(data == 0) {
-                    alert("사용 가능한 아이디입니다.")
-                    check=true;
-                }else{
-                    alert("이미 사용중인 아이디입니다.")
-                    $(frm.uid).focus();
+        }else{
+            $.ajax({
+                type:"post",
+                url:"/users/login",
+                data:{uid:uid},
+                success:function(data){
+                    if(data == 0){
+                        alert("사용 가능한 아이디입니다.");
+                        check=true;
+                    }else{
+                        alert("이미 사용중인 아이디입니다.");
+                        $(frm.uid).focus();
+                    }
                 }
-            }
-        });
+            });
+        }
     });
 
-    // 아이디가 바뀌었을 때 -> 다시 중복체크 여부
+    //아이디가 변경된 경우 -> 다시 중복체크 여부 확인하기
     $(frm.uid).on("change", function(){
         check=false;
+    });
+
+    //주소검색 버튼 클릭한 경우
+    $("#search").on("click", function(){
+        new daum.Postcode({
+            oncomplete:function(data){
+                console.log(data);
+                if(data.buildingName != ""){ //빌딩이름이 있으면
+                    $(frm.address1).val(data.address + " " + data.buildingName);
+                }else{
+                    $(frm.address1).val(data.address);
+                }
+            }
+        }).open();
     });
 </script>
