@@ -32,9 +32,10 @@
 </div>
 
 <script>
+    //사진 출력하기
     const photo="<%=user.photo%>";
     if(photo){
-        $("#photo").attr("src", "/upload/photo/" + photo);
+        $("#photo").attr("src", "/upload/photo/" + photo); //id 는 # 으로 선택.
     }else{ //photo가 없으면 더미 이미지로 보이게
         $("#photo").attr("src", "http://via.placeholder.com/100x100");
     }
@@ -54,7 +55,9 @@
         const address1=$(frm.address1).val();
         const address2=$(frm.address2).val();
 
-        if(confirm("변경된 내용을 저장하시겠습니까?")) frm.submit(); //위 frm찾아가서 action이 없으면 현재 주소로 간다.
+        if(confirm("변경된 내용을 저장하시겠습니까?")) {
+            frm.submit(); //위 frm찾아가서 action이 없으면 현재 주소로 간다. action이 없으면 나 자신을 호출
+        }
     });
 
     //주소검색 버튼 클릭한 경우

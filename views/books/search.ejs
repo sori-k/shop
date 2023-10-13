@@ -17,21 +17,33 @@
     </div>
 </div>
 
-<!-- 도서검색 템플릿 -> html이 아니라서 compile이 필요 (데이터가져온게 성공했을때) -->
+<!-- 도서검색 템플릿 -> html이 아니라서 compile이 필요 (데이터가져온게 성공했을때) div_books 안으로 들어감-->
 <script id="temp_books" type="x-handlebars-template">
     <table class="table">
+        <tr>
+            <td colspan="6">
+                <input type="checkbox" id="all">
+                <a class="btn btn-primary btn-sm ms-3" id="save">선택 저장</a>
+            </td>
+        </tr>
         {{#each documents}}
         <tr>
-            <td><img src="{{isImage thumbnail}}" width="40"></td>
+            <td><input type="checkbox" class="chk" book="{{toString @this}}"></td>
+            <td><img idx="{{@index}}" src="{{isImage thumbnail}}" width="40" style="cursor:pointer;"></td>
             <td>{{title}}</td>
             <td>{{authors}}</td>
             <td>{{fmtPrice price}}</td>
+            <td><button class="btn btn-primary" book="{{toString @this}}">도서 등록</button></td>
         </tr>
+        <%-include("modal.ejs")%>
         {{/each}}
     </table>
 </script>
 
 <script>
+    Handlebars.registerHelper("toString", function(book){ // toString @this => Object가 string으로 바뀌어서 this에 들어감
+        return JSON.stringify(book); //book에 대한 json을 string으로 바꿔주는 자바스크립 함수
+    });
     Handlebars.registerHelper("isImage", function(image){
         if(image){
             return image;
@@ -51,6 +63,83 @@
     let query= "자바"; // 기본 값 변수 선언
     let page= 1;
     getBooks(); // 함수 실행 (쿼리랑 데이터를 받아서 결과를 출력)
+
+    //선택 저장버튼을 클릭한 경우
+    $("#div_books").on("click", "#save", function(){
+        const chk=$("#div_books .chk:checked").length;
+        if(chk == 0){
+            alert("등록할 도서를 선택하세요.");
+            return;
+        }
+        if(confirm(chk + "개 도서를 등록하시겠습니까?")){
+            let count = 0;
+            $("#div_books .chk:checked").each(function(){ //상태가 체크된것만 반복
+                const book=JSON.parse($(this).attr("book"));
+                const authors=book.authors.join();
+                $.ajax({
+                    type:"post",
+                    url:"/books/search/insert",
+                    data:{...book, authors},
+                    success:function(data){
+                        if(data == 0) count++;
+                    }
+                });
+            });
+            setTimeout(function(){
+                alert(count + "개 도서가 저장되었습니다.");
+            $("#div_books .chk").prop("checked", false); //체크박스 선택 해제
+            $("#div_books #all").prop("checked", false); // 전체 선택 체크박스 선택 해제
+            }, 1000); //1초후에 실행
+        }
+    });
+
+
+    //전체 선택 체크박스를 클릭한 경우
+    $("#div_books").on("click", "#all", function(){ //id => #으로 가져오기
+        if($(this).is(":checked")){ //this가 checked 됐는지 묻는것 (전체 선택한 경우)
+            $("#div_books .chk").prop("checked", true);
+        }else{
+            $("#div_books .chk").prop("checked", false);
+        }
+    });
+
+    // 각 행의 체크박스를 클릭한 경우
+    $("#div_books").on("click", ".chk", function(){
+        const all=$("#div_books .chk").length; // 전체 chk의 갯수를 구하는
+        const chk=$("#div_books .chk:checked").length; //chk가 checked 된거
+        if(all == chk) {
+            $("#div_books #all").prop("checked", true);
+        }else{
+            $("#div_books #all").prop("checked", false);
+        }
+    });
+
+    //도서 등록 버튼 클릭한 경우
+    $("#div_books").on("click", "button", function(){
+        const book=JSON.parse($(this).attr("book")); //string인 book을 가져와서?
+        const authors=book.authors.join();
+
+        if(confirm("도서 등록하시겠습니까?")) {
+            $.ajax({
+                type:"post",
+                url:"/books/search/insert",
+                data:{...book, authors},
+                success:function(data){
+                    if(data == '0'){
+                        alert("도서가 등록되었습니다.");
+                    }else{
+                        alert("이미 등록된 도서입니다.");
+                    }
+                }
+            })
+        }
+    });
+
+    //이미지를 클릭한 경우
+    $("#div_books").on("click", "img", function(){
+        const idx= $(this).attr("idx");
+        $("#modal" + idx).modal("show");
+    });
 
     $("#next").on("click", function(){
         page++;

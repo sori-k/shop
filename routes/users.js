@@ -102,8 +102,8 @@ router.get('/update', function(req, res){
 });
 
 // 정보수정
-router.post('/update', upload.single('file'), function(req, res){
-    const uid=req.body.uid;
+router.post('/update', upload.single('file'), function(req, res){ //업로드할 파일이 하나니까 single
+    const uid=req.body.uid; // post로 데이터를 넘겨주면 req의 body에 저장되어있다. name으로 받아오면 된다.
     const uname=req.body.uname;
     const phone=req.body.phone;
     const address1=req.body.address1;
@@ -111,11 +111,13 @@ router.post('/update', upload.single('file'), function(req, res){
     //console.log(uid,uname,phone,address1,address2);
 
     let photo = req.body.photo; //기존 사진을
-    if(req.file) photo = req.file.filename; //바뀐 파일이 있으면 새롭게
+    if(req.file) photo = req.file.filename; //바뀐 파일이 있으면 새롭게 업로드한 이름으로 바꿔줘
     console.log('photo....', photo);
 
     //db에 업데이트
     const sql='update users set uname=?, phone=?, address1=?, address2=?, photo=? where uid=?';
+
+    //sql문 실행
     db.get().query(sql, [uname, phone, address1, address2, photo, uid], function(err, rows){
         if(err) console.log(err); // 에러가 있으면 에러 출력 아니면 수정 후 마이 페이지로 이동
         res.redirect('/users/mypage?uid=' + uid);
@@ -134,7 +136,7 @@ router.post("/change", function(req, res){
     const sql='update users set upass=? where uid=?';
     db.get().query(sql, [upass, uid], function(err, rows){
         if(err) console.log(err);
-        res.sendStatus(200); // 잘 실행되었는지 코드 보내는 거 200 -> ok
+        res.sendStatus(200); // 잘 실행되었는지 코드 보내는 거 200 -> ok (.ajax으로 할 경우)
     });
 });
 
