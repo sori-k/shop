@@ -79,17 +79,19 @@
                 $.ajax({
                     type:"post",
                     url:"/books/search/insert",
+                    async : false,
                     data:{...book, authors},
                     success:function(data){
                         if(data == 0) count++;
                     }
                 });
             });
+
             setTimeout(function(){
                 alert(count + "개 도서가 저장되었습니다.");
             $("#div_books .chk").prop("checked", false); //체크박스 선택 해제
             $("#div_books #all").prop("checked", false); // 전체 선택 체크박스 선택 해제
-            }, 1000); //1초후에 실행
+           }, 1000); //1초후에 실행
         }
     });
 

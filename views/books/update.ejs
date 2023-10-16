@@ -1,0 +1,48 @@
+<div class="my-5">
+    <h1 class="text-center mb-5">정보수정</h1>
+    <form name="frm" class="card p-3">
+        <div class="input=group mb-3">
+            <span class="input-group-text">도서코드</span>
+            <input name="bid" class="form-control" value="<%=book.BID%>" readonly>
+        </div>
+        <div class="input=group mb-3">
+            <span class="input-group-text">도서제목</span>
+            <input name="title" class="form-control" value="<%=book.TITLE%>">
+        </div>
+        <div class="input=group mb-3">
+            <span class="input-group-text">도서가격</span>
+            <input name="price" class="form-control" value="<%=book.PRICE%>">
+        </div>
+        <div class="input=group mb-3">
+            <span class="input-group-text">도서저자</span>
+            <input name="authors" class="form-control" value="<%=book.AUTHORS%>">
+        </div>
+        <div class="input=group mb-3">
+            <span class="input-group-text">출판사</span>
+            <input name="publisher" class="form-control" value="<%=book.PUBLISHER%>">
+        </div>
+        <textarea name="contents" class="form-control" rows="10"><%=book.CONTENTS%></textarea>
+        <div class="text-center my-3">
+            <button class="btn btn-primary">정보수정</button>
+            <button class="btn btn-secondary" type="reset">수정취소</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(frm).on("submit", function(e){
+        e.preventDefault();
+
+        //유효성 체크
+        const price=$(frm.price).val();
+        if(price.replace(/[0-9]/g,'')){
+            alert("가격은 숫자로 입력하세요.");
+            $(frm.price).val("<%=book.PRICE%>");
+            $(frm.price).focus();
+            return;
+        }
+        if(!confirm("도서정보를 수정하시겠습니까?")) return;
+        frm.method="post";
+        frm.submit(); //books/update로 감 update페이지에 post가 없으면 404페이지 나옴
+    })
+</script>

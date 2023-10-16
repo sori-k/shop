@@ -1,6 +1,20 @@
 var express = require('express');
 var router = express.Router();
 var db = require('../db'); // 밖에 있는 db 파일 import (같은 경로에 없어서 ../ <- 밖으로)
+var multer = require('multer');
+
+//도서이미지 업로드함수
+var upload = multer({
+    storage:multer.diskStorage({
+        destination:(req, file, done) => {
+            done(null, './public/upload/book') // 현재 프로젝트의 퍼블릭에 업로드의 포토 (경로)
+        },
+        filename:(req, file, done) => { // 파일 이름 지정
+            var fileName = Date.now() + ".jpg";
+            done(null, fileName);
+        }
+    })
+});
 
 /* 도서 검색 페이지. */
 router.get('/', function(req, res, next) {
@@ -32,12 +46,16 @@ router.post('/search/insert', function(req, res) {
     });
 });
 
-//도서목록 JSON 데이터 가져오는
+//도서목록 JSON (데이터 가져오는)
 router.get('/list.json', function(req, res){
     const page=req.query.page;
     const start=(parseInt(page)-1)*5;
-    const sql='select * from books order by bid desc limit ?, 5'; //시작페이지가 0
-    db.get().query(sql, [start], function(err, rows){
+    const key=req.query.key;
+    const query='%' + req.query.query + '%';
+            // = `%${req.query.query}%`;  <- 이렇게도 가능 ` 백팁? 써서 가능
+    const sql='select * from books where '+ key +' like ? order by bid desc limit ?, 5'; //시작페이지가 0
+            //=`select * from books where ${key} like ? order by bid desc limit ?, 5`;  <- 이렇게도 작성 가능
+    db.get().query(sql, [query, start], function(err, rows){
         if(err) console.log('도서목록 JSON:' , err);
         res.send(rows);
     });
@@ -50,11 +68,77 @@ router.get('/list', function(req, res){
 
 //데이터 갯수 출력
 router.get('/count', function(req, res){
-    const sql='select count(*) total from books';
-    db.get().query(sql, function(err, rows){
+    const key=req.query.key;
+    const query='%' + req.query.query + '%'; //앞뒤로 %%를 붙여줌 (앞, 뒤 어디에 단어가 있든 검색하려고)
+    const sql='select count(*) total from books where ' + key + ' like?';
+            //=`select count(*) total from books where ${key} like?`;  <- ${} 안에 변수명 적기
+    db.get().query(sql, [query], function(err, rows){
         res.send(rows[0]);
     });
 });
+
+//도서 삭제
+router.post('/delete', function(req, res){ //get, ? 일 때는 query, post일때는 body
+    const bid=req.body.bid;
+    const sql='delete from books where bid=?';
+    db.get().query(sql, [bid], function(err){
+        if(err) console.log('도서삭제', err);
+        res.sendStatus(200); //status코드 200은 성공, 500은 서버오류, 404는 페이지 없음
+    });
+});
+
+//도서정보 페이지 이동
+router.get('/read', function(req, res){
+    const bid=req.query.bid;
+    const sql='select *, FORMAT(PRICE, 0) FMTPRICE, date_format(REGDATE, "%Y-%m-%d") FMTDATE from books where bid=?';
+    db.get().query(sql, [bid], function(err, rows){
+        if(err) console.log('도서정보 :', err);
+        res.render('index', {title:'도서정보', pageName:'books/read.ejs', book:rows[0]})
+    });
+});
+
+//도서정보 수정 페이지로 이동
+router.get('/update', function(req, res){
+    const bid=req.query.bid;
+    const sql='select *, FORMAT(PRICE, 0) FMTPRICE, date_format(REGDATE, "%Y-%m-%d") FMTDATE from books where bid=?';
+    db.get().query(sql, [bid], function(err, rows){
+        if(err) console.log('정보수정 :', err);
+        res.render('index', {title:'정보수정', pageName:'books/update.ejs', book:rows[0]})
+    });
+});
+
+//도서 수정(db에)
+router.post('/update', function(req, res){
+    const bid=req.body.bid;
+    const title=req.body.title;
+    const price=req.body.price;
+    const authors=req.body.authors;
+    const publisher=req.body.publisher;
+    const contents=req.body.contents;
+
+    //console.log(bid,title,price,authors,publisher,contents);
+
+    const sql='update books set title=?, price=?, authors=?, publisher=?, contents=? where bid=?';
+    db.get().query(sql, [title, price, authors, publisher, contents, bid], function(err){
+        if(err) console.log('수정 오류: ', err);
+        res.redirect('/books/read?bid=' + bid);
+    })
+});
+
+//이미지 업로드
+router.post('/upload', upload.single('file'), function(req, res){
+    if(req.file){
+        const bid=req.body.bid;
+        //console.log('파일이름: ', req.file.filename, bid);
+        const image = '/upload/book/' + req.file.filename;
+        const sql='update books set image=? where bid=?';
+        db.get().query(sql, [image, bid], function(err){
+            if(err) console.log('이미지 업로드 오류: ', err);
+            res.redirect('/books/read?bid=' + bid);
+        });
+    }
+});
+
 
 
 
@@ -63,3 +147,4 @@ module.exports = router;
 // 모든 페이지는 'index' 통해서
 // render : 페이지 출력
 // send : 데이터 출력
+//db에 업데이트, 삭제 등은 post
