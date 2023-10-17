@@ -1,0 +1,72 @@
+<style>
+    .bi {
+        color:pink;
+        cursor: pointer;
+    }
+</style>
+<div class="my-5">
+    <h1 class="text-center mb-5">도서정보</h1>
+    <div class="row">
+        <div class="col-lg-4 mb-3">
+            <img src="<%=book.IMAGE%>" width="70%">
+        </div>
+        <div class="col pt-2">
+            <h5>
+                [<%=book.BID%>] <%=book.TITLE%>
+                <span id="like">
+                    <i class="bi bi-heart ms-2"></i>
+                    <i class="bi bi-heart-fill ms-2" style="display: none;"></i>
+                </span>
+            </h5>
+            <hr>
+            <div class="my-3">저 자: <%=book.AUTHORS%></div>
+            <div class="my-3">가 격: <%=book.FMTPRICE%>원</div>
+            <div class="my-3">등록일: <%=book.FMTDATE%></div>
+            <div class="my-3">출판사: <%=book.PUBLISHER%></div>
+            <div class="my-3">ISBN: <%=book.ISBN%></div>
+            <hr>
+            <button class="btn btn-warning px-5">장바구니</button>
+            <button class="btn btn-success px-5">바로구매</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bid="<%=book.BID%>";
+    $("#like").on("click", ".bi-heart", function(){
+        if(!sessionStorage.getItem("uid")){
+            sessionStorage.setItem("target", "/books/info?bid=" + bid); //또는 위에 변수 지정지우고 
+            location.href="/users/login";                              //("target", "/books/info?bid=<%=book.BID%>");
+        }else{
+            //좋아요 추가 내용 -> db에 저장하는..
+            $.ajax({
+                type:"post",
+                url:"/books/like/insert",
+                data:{bid, uid:sessionStorage.getItem("uid")},
+                success:function(){
+                    alert("좋아요 추가!");
+                    check();
+                }
+            });
+        }
+    });
+
+    check();
+    //좋아요 체크 함수
+    function check(){
+        $.ajax({
+            type:"get",
+            url:"/books/like/check",
+            data:{bid, uid:sessionStorage.getItem("uid")},
+            success:function(data){
+                if(data == 0){
+                    $("#like .bi-heart").show();
+                    $("#like .bi-heart-fill").hide();
+                }else{
+                    $("#like .bi-heart").hide();
+                    $("#like .bi-heart-fill").show();
+                }
+            }
+        })
+    }
+</script>

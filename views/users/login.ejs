@@ -52,7 +52,13 @@
                         alert("비밀번호가 일치하지 않습니다.");
                     }else{
                         sessionStorage.setItem("uid", uid); // 로그인했을 경우 세션스토리지에 uid 저장
-                        location.href="/"; // 로그인 후 메인 페이지로 이동
+                        
+                        const target=sessionStorage.getItem("target");
+                        if(target){
+                            location.href=target;
+                        }else{
+                            location.href="/"; // 로그인 후 메인 페이지로 이동
+                        }
                     }
                 }
             });

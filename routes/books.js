@@ -87,7 +87,7 @@ router.post('/delete', function(req, res){ //get, ? 일 때는 query, post일때
     });
 });
 
-//도서정보 페이지 이동
+//도서정보 페이지 이동 -> 관리자 전용
 router.get('/read', function(req, res){
     const bid=req.query.bid;
     const sql='select *, FORMAT(PRICE, 0) FMTPRICE, date_format(REGDATE, "%Y-%m-%d") FMTDATE from books where bid=?';
@@ -139,7 +139,34 @@ router.post('/upload', upload.single('file'), function(req, res){
     }
 });
 
+//도서정보 페이지 출력 -> 사용자 전용
+router.get('/info', function(req, res){
+    const bid=req.query.bid;
+    const sql='select *, FORMAT(PRICE, 0) FMTPRICE, DATE_FORMAT(REGDATE, "%Y-%m-%d") FMTDATE from books where bid=?';
+    db.get().query(sql, [bid], function(err, rows){
+        res.render('index', {title:'도서정보', pageName:'books/info.ejs', book:rows[0]});
+    });
+});
 
+//좋아요 추가
+router.post('/like/insert', function(req, res){
+    const uid=req.body.uid;
+    const bid=req.body.bid;
+    const sql='insert into favorite(uid, bid) values(?, ?)';
+    db.get().query(sql, [uid, bid], function(err){
+        res.sendStatus(200);
+    })
+});
+
+//좋아요 체크
+router.get('/like/check', function(req, res){
+    const uid=req.query.uid;
+    const bid=req.query.bid;
+    const sql='select count(*) cnt from favorite where uid=? and bid=?';
+    db.get().query(sql, [uid, bid], function(err, rows){ //결과값 받아야 해서 rows 기재
+        res.send(rows[0].cnt.toString()); //http://localhost:3000/books/like/check?uid=black&bid=41 -> 갯수 나옴
+    })
+});
 
 
 module.exports = router;
