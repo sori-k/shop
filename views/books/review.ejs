@@ -1,0 +1,115 @@
+<div>
+    <button id="btn-review" class="btn btn-primary w-100 my-5">리뷰작성</button>
+    <div id="div-review" style="display: none;">
+        <textarea id="contents" class="form-control" rows="5" placeholder="내용을 입력하세요."></textarea>
+        <div class="text-end mt-2 mb-5">
+            <button id="btn-save" class="btn btn-danger btn-sm px-5">등록</button>
+        </div>
+    </div>
+    <div id="div_review"></div>
+    <div id="pagination" class="pagination justify-content-center mt-5"></div>
+</div>
+
+<script id="temp_review" type="x-handlebars-template">
+    {{#each .}}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="ellipsis2 contents" style="cursor:pointer">[{{rid}}] {{contents}}</div>
+            </div>
+            <div class="card-footer">
+                Created by {{uid}} on {{regdate}}
+            </div>
+        </div>
+    {{/each}}
+</script>
+<script>
+    let page = 1;
+    getTotal(); //total을 호출하면 review 자동으로
+
+    //리뷰작성 (로그인/로그아웃시)
+    if(sessionStorage.getItem("uid")){
+        $("#btn-review, #div-review").toggle(); //보이는건 안보이게, 안보이는건 보이게
+    }
+
+
+    //(리뷰)등록 버튼을 누른 경우
+    $("#btn-save").on("click", function(){
+        const contents=$("#contents").val();
+        if(contents == ""){
+            alert("내용을 입력하세요.");
+            $("#contents").focus();
+            return;
+        }
+        $.ajax({
+            type:"post",
+            url:"/review/insert",
+            data:{bid:"<%=book.BID%>", uid:sessionStorage.getItem("uid"), contents},
+            success:function(){
+                getTotal();
+                $("#contents").val("");
+            }
+        })
+    });
+
+
+    //리뷰 작성 버튼 클릭한 경우
+    $("#btn-review").on("click", function(){
+        sessionStorage.setItem("target", "/books/info?bid=<%=book.BID%>");
+        location.href="/users/login";
+    });
+
+
+    //리뷰 내용을 눌렀을 때,
+    $("#div_review").on("click", ".contents", function(){
+        $(this).toggleClass("ellipsis2"); //넣었다 뺐다 하는 (2줄이상 리뷰들을..)
+    });
+
+
+    function getTotal(){
+        $.ajax({
+            type:"get",
+            url:"/review/count",
+            data:{bid:"<%=book.BID%>"},
+            success:function(data){
+                if(data < 6){
+                    $("#pagination").hide();
+                    getReview();
+                }else{
+                    $("#pagination").show();
+                    const totalPages = Math.ceil(data/5);
+                    $("#pagination").twbsPagination("changeTotalPages", totalPages, page);
+                }
+            }
+        });
+    }
+
+
+    function getReview(){
+        $.ajax({
+            type:"get",
+            url:"/review/list.json",
+            data:{bid:"<%=book.BID%>", page},
+            success:function(data){
+                //console.log(data);
+                const temp=Handlebars.compile($("#temp_review").html());
+                $("#div_review").html(temp(data));
+            }
+        });
+    }
+
+
+    $('#pagination').twbsPagination({
+        totalPages:10, //총 페이지 번호 수
+        visiblePages: 5, // 하단에서 한 번에 보여 지는 페이지 번호 수
+        startPage : 1, // 시작 시 표시되는 현재 페이지
+        initiateStartPageClick: false, // 플러그인이 시작 시 페이지 버튼 클릭 여부 (default : true) 
+        first : '<i class="bi bi-caret-left-fill"></i>', // 페이지네이션 버튼 중 처음으로 돌아가는 버튼에 쓰여 있는 텍스트
+        prev : '<i class="bi bi-caret-left"></i>', // 이전 페이지 버튼에 쓰여 있는 텍스트
+        next : '<i class="bi bi-caret-right"></i>', // 다음 페이지 버튼에 쓰여 있는 텍스트
+        last : '<i class="bi bi-caret-right-fill"></i>', // 페이지네이션 버튼 중 마지막으로 가는 버튼에 쓰여 있는 텍스트
+        onPageClick: function (event, clickPage) {
+            page=clickPage;
+            getReview(); 
+        }
+    });
+</script>

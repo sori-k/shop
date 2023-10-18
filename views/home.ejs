@@ -26,7 +26,11 @@
                     <div class="ellipsis mt-2">{{TITLE}}</div>
                 </div>
                 <div class="card-footer">
-                    {{fmtPrice PRICE}}
+                    <span style="font-size:0.7rem;">{{fmtPrice PRICE}}</span>
+                    <span class="float-end">
+                        <i class="bi {{heart ucnt}} like" bid="{{BID}}"></i>
+                        <span class="count">{{total}}</span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -34,6 +38,14 @@
 </script>
 
 <script>
+    Handlebars.registerHelper("heart", function(ucnt){
+        if(ucnt == 1){
+            return "bi-heart-fill";
+        }else{
+            return "bi-heart";
+        }
+    })
+
     Handlebars.registerHelper("isImage", function(image){
         if(image){
             return image;
@@ -51,6 +63,39 @@
 <script>
     let page = 1;
     getTotal();
+
+    //좋아요 추가
+    $("#div_books").on("click", ".bi-heart", function(){
+        if(!sessionStorage.getItem("uid")){ //로그인 상태 아니면 로그인 페이지로
+            location.href="/users/login";
+        }else{ //로그인 상태면 
+            const bid=$(this).attr("bid");
+            $.ajax({
+                type:"post",
+                url:"/books/like/insert",
+                data:{uid:sessionStorage.getItem("uid"), bid},
+                success:function(){
+                    alert("좋아요 추가!");
+                    getTotal();
+                }
+            })
+        }
+    });
+
+    //좋아요 취소
+    $("#div_books").on("click", ".bi-heart-fill", function(){
+        const bid=$(this).attr("bid");
+        $.ajax({
+            type:"get",
+            url:"/books/like/delete",
+            data:{uid:sessionStorage.getItem("uid"), bid},
+            success:function(){
+                alert("좋아요 취소!");
+                getTotal();
+            }
+        })
+    });
+
 
     $(frm).on("submit", function(e){
         e.preventDefault();
@@ -81,7 +126,7 @@
         $.ajax({
             type:"get",
             url:"/books.json",
-            data:{page, query:$(frm.query).val()}, //변수랑 값이 같으면 1개만 적어도 됨, query에 frm.query의 값을 넣어서 보냄(books.json으로)
+            data:{page, query:$(frm.query).val(), uid:sessionStorage.getItem("uid")}, //변수랑 값이 같으면 1개만 적어도 됨, query에 frm.query의 값을 넣어서 보냄(books.json으로)
             success:function(data){
                 //console.log(data);
                 const temp=Handlebars.compile($("#temp_books").html());

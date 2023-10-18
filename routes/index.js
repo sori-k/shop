@@ -16,6 +16,7 @@ router.get('/search', function(req, res){
 
 //도서목록 JSON 데이터로 출력 (홈에서 사용)
 router.get('/books.json', function(req, res){
+  const uid=req.query.uid;
   const page=parseInt(req.query.page); //query로 받으면 문자열이라 숫자로 변환하기
   const query=`%${req.query.query}%`; 
 
@@ -23,10 +24,15 @@ router.get('/books.json', function(req, res){
   //console.log('///////////////', query);
 
   const start=(page-1)*6; // 한 페이지에 6개씩 나오게
-  const sql=`select * from books where title like ? or authors like ? order by bid desc limit ?, 6`;
-  db.get().query(sql, [query, query, start], function(err, rows){
+  //const sql=`select * from books where title like ? or authors like ? order by bid desc limit ?, 6`;
+
+  let sql='select *, (select count(*) from favorite where bid=books.bid) total, '; //책 별로 총 좋아요 수
+  sql+= '(select count(*) from favorite where bid=books.bid and uid=?) ucnt from books '; //ucnt => id별 누른
+  sql+= 'where title like ? or authors like ? order by bid desc limit ?, 6';
+
+  db.get().query(sql, [uid, query, query, start], function(err, rows){
     if(err) console.log('도서목록 JSON 오류:', err);
-    res.send(rows);
+    res.send(rows); //http://localhost:3000/books.json?uid=black&page=1&query=
   })
 });
 

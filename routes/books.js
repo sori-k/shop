@@ -158,17 +158,27 @@ router.post('/like/insert', function(req, res){
     })
 });
 
-//좋아요 체크
-router.get('/like/check', function(req, res){
+//좋아요 등록 취소
+router.get('/like/delete', function(req, res){
     const uid=req.query.uid;
     const bid=req.query.bid;
-    const sql='select count(*) cnt from favorite where uid=? and bid=?';
-    db.get().query(sql, [uid, bid], function(err, rows){ //결과값 받아야 해서 rows 기재
-        res.send(rows[0].cnt.toString()); //http://localhost:3000/books/like/check?uid=black&bid=41 -> 갯수 나옴
+    const sql='delete from favorite where uid=? and bid=?';
+    db.get().query(sql, [uid, bid], function(err){
+        res.sendStatus(200);
     })
 });
 
+//좋아요수 체크
+router.get('/like/check', function(req, res){
+    const uid=req.query.uid;
+    const bid=req.query.bid;
+    const sql='select count(*) total, (select count(*) from favorite where bid=? and uid=?) ucnt from favorite where bid=?';
 
+    db.get().query(sql, [bid, uid, bid], function(err, rows){
+        if(err) console.log('좋아요 수 체크 오류:', err);
+        res.send(rows[0]);
+    });
+});
 module.exports = router;
 
 // 모든 페이지는 'index' 통해서
