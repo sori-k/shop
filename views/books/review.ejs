@@ -12,19 +12,105 @@
 
 <script id="temp_review" type="x-handlebars-template">
     {{#each .}}
-        <div class="card mb-3">
-            <div class="card-body">
-                <div class="ellipsis2 contents" style="cursor:pointer">[{{rid}}] {{contents}}</div>
+        <div class="row">
+            <div class="col-lg-2">
+                <img src="{{isImage photo}}" width="50px" class="photo">
+                <div style="font-size:0.8rem;">{{uname}}</div>
             </div>
-            <div class="card-footer">
-                Created by {{uid}} on {{regdate}}
+
+            <!-- 보기 -->
+            <div class="col display{{rid}}">
+                <div style="font-size:0.9rem;">{{fmtdate}}</div>
+                <div class="ellipsis2 contents" style="cursor:pointer;">
+                    [{{rid}}] {{contents}}
+                </div>
+                <div class="text-end" style="{{show uid}}">
+                    <button rid="{{rid}}" class="btn-update btn btn-primary btn-sm">수정</button>
+                    <button rid="{{rid}}" class="btn-delete btn btn-danger btn-sm">삭제</button>
+                </div>
+            </div>
+
+            <!-- 수정 -->
+            <div class="col update{{rid}}" style="display:none;">
+                <div style="font-size:0.9rem;">{{fmtdate}}</div>
+                <div>
+                    <textarea id="contents{{rid}}" class="form-control" rows="10">{{contents}}</textarea>
+                </div>
+                <div class="text-end" style="{{show uid}}">
+                    <button rid="{{rid}}" class="btn-save btn btn-primary btn-sm">저장</button>
+                    <button rid="{{rid}}" contents="{{contents}}" class="btn-cancel btn btn-secondary btn-sm">취소</button>
+                </div>
             </div>
         </div>
+        <hr>
     {{/each}}
 </script>
 <script>
+    Handlebars.registerHelper("show", function(uid){
+        if(uid != sessionStorage.getItem("uid")){
+            return "display:none";
+        }
+    });
+
+
+    Handlebars.registerHelper("isImage", function(photo){
+        if(photo) return "/upload/photo/" + photo;
+        else return "http://via.placeholder.com/100x100";
+    });
+</script>
+
+<script>
     let page = 1;
     getTotal(); //total을 호출하면 review 자동으로
+
+    //각 행의 수정버튼을 누른 경우
+    $("#div_review").on("click", ".btn-update", function(){
+        const rid=$(this).attr("rid");
+        $("#div_review .display" + rid).toggle();
+        $("#div_review .update" + rid).toggle();
+    });
+
+    // 수정 취소
+    $("#div_review").on("click", ".btn-cancel", function(){
+        const rid=$(this).attr("rid");
+        $("#div_review .display" + rid).toggle();
+        $("#div_review .update" + rid).toggle();
+
+        const contents=$(this).attr("contents"); //수정하기 전의 값
+        $("#div_review #contents" + rid).val(contents); //수정화면에서 수정 취소하고 다시 수정화면으로 가면 원래 상태로
+    });
+
+    // 수정 저장
+    $("#div_review").on("click", ".btn-save", function(){
+        const rid=$(this).attr("rid");
+        const contents=$("#div_review #contents" + rid).val();
+        //alert(contents);
+        if(!confirm(`${rid}번 리뷰를 수정하시겠습니까?`)) return;
+        $.ajax({
+            type:"post",
+            url:"/review/update",
+            data:{contents, rid},
+            success:function(){
+                getTotal();
+            }
+        });
+    });
+
+
+    //각 행의 삭제버튼을 누른 경우 (리뷰목록에서)
+    $("#div_review").on("click", ".btn-delete", function(){
+        const rid=$(this).attr("rid");
+        if(!confirm(`${rid}번 리뷰를 삭제하시겠습니까?`)) return;
+        $.ajax({
+            type:"post",
+            url:"/review/delete",
+            data:{rid},
+            success:function(){
+                getTotal();
+            }
+        })
+    });
+
 
     //리뷰작성 (로그인/로그아웃시)
     if(sessionStorage.getItem("uid")){
