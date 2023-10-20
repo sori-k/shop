@@ -55,9 +55,9 @@ router.post('/update', function(req, res){
     const sql='update cart set qnt=? where cid=?';
     db.get().query(sql, [qnt, cid], function(err){
         res.sendStatus(200);
+        
     })
 });
-
 
 // res.sendStatus() => 특별한 값 없을때,,
 

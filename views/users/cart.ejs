@@ -22,6 +22,9 @@
         <i class="bi bi-cart-check"></i> 장바구니 <i class="bi bi-cart-check"></i>
     </h1>
     <div id="div_cart"></div>
+    <div class="text-center mt-3">
+        <button id="btn-order" class="btn btn-success px-5">주문하기</button>
+    </div>
 </div>
 
 <script id="temp_cart" type="x-handlebars-template">
@@ -45,7 +48,7 @@
         {{#each .}}
             <tr>
                 <td><input cid="{{cid}}" class="chk" type="checkbox"></td>
-                <td>{{bid}}</td>
+                <td>{{cid}}-{{bid}}</td>
                 <td><img src="{{image}}" width="50px"></td>
                 <td>{{title}}</td>
                 <td>{{fmtprice}}원</td>
@@ -77,6 +80,22 @@
 <script>
     getCart();
 
+    //주문하기 버튼 클릭한 경우
+    $("#btn-order").on("click", function(){
+        const cnt=$("#div_cart .chk:checked").length;
+        if(cnt == 0){
+            alert("주문할 상품을 선택하세요.");
+        }else{
+            let cart = [];
+            $("#div_cart .chk:checked").each(function(){ //장바구니에 체크된 것을 반복
+                const cid=$(this).attr("cid"); //cid를 가져와서
+                cart.push(cid); //cart(배열)에 cid를 넣는것
+            });
+            location.href="/order/insert?cart=" + cart.join();  //카트에 들어있는 내용들이 , 찍혀서 나옴(배열에 들어있어서)
+            
+        }
+    });
+
     //전체 선택(checkbox)
     $("#div_cart").on("click", "#all", function(){
         if($(this).is(":checked")){ //전체선택이 되었으면
@@ -86,6 +105,11 @@
         }
     });
 
+
+    /*
+    $("#all").click(function(){
+    });
+    */
 
     //각각 체크박스 선택
     $("#div_cart").on("click", ".chk", function(){
@@ -172,7 +196,7 @@
             url:"/cart/list.json",
             data:{uid:sessionStorage.getItem("uid")},
             success:function(data){
-                //console.log(data);
+                console.log(data);
                 const temp=Handlebars.compile($("#temp_cart").html());
                 $("#div_cart").html(temp(data));
 
@@ -180,6 +204,12 @@
                 data.forEach(item=>{
                     sum+=item.sum;
                 });
+                
+                /*
+                for(var i=0; i<data.length; i++){
+                    sum +=data[i].sum;
+                }
+                */
                 $("#sum").html(sum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "원");
             }
         })
