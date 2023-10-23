@@ -10,13 +10,19 @@
             <li class="nav-item">
                 <a class="nav-link active" aria-current="page" href="/">Home</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" id="order" style="display:none;">
+                <a class="nav-link active" aria-current="page" href="/order">주문목록</a>
+            </li>
+            <li class="nav-item" id="search" style="display:none;">
                 <a class="nav-link active" aria-current="page" href="/books">도서검색</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" id="users" style="display:none;">
                 <a class="nav-link active" aria-current="page" href="/users">사용자목록</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" id="order2" style="display:none;">
+                <a class="nav-link active" aria-current="page" href="/order/admin">주문관리</a>
+            </li>
+            <li class="nav-item" id="books" style="display:none;">
                 <a class="nav-link active" aria-current="page" href="/books/list">도서목록</a>
             </li>
             <li class="nav-item">
@@ -43,10 +49,15 @@
   </nav>
 
 <script> //sessionstorage 에 넣은 내용을 가져오는
-    if(sessionStorage.getItem("uid")){ //로그인하면 보이는..
-        $("#login, #mypage, #logout, #cart").toggle(); // 로그인시 => 마이페이지, 로그아웃, 장바구니
+    if(sessionStorage.getItem("uid") && sessionStorage.getItem("uid") != "admin"){ //일반사용자가 로그인
+        $("#login, #mypage, #logout, #cart, #order").toggle(); // 로그인시 => 마이페이지, 로그아웃, 장바구니
         $("#mypage a").html(sessionStorage.getItem("uid"));
     }     // 한 칸 띄면 and 표시
+
+    if(sessionStorage.getItem("uid") && sessionStorage.getItem("uid") == "admin"){ //관리자가 로그인
+        $("#login, #mypage, #logout, #search, #users, #books, #order2").toggle();
+        $("#mypage a").html(sessionStorage.getItem("uid"));
+    }
 
     //로그아웃
     $("#logout").on("click", "a", function(e){
